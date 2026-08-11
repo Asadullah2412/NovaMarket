@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from service.user_service import UserRouter
+from service.order_service import OrderRouter
+from service.product_service import ProductsRouter
 
 
 
@@ -17,6 +19,8 @@ app.add_middleware(
 
 
 app.include_router(router=UserRouter)
+app.include_router(router=ProductsRouter)
+app.include_router(router=OrderRouter)
 
 
 # uvicorn main:app --reload

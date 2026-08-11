@@ -1,31 +1,32 @@
-class Users:
+class Order:
     def __init__(self,name='',order_id='',products =[]):
         self.user_name = name
         self.products = products
         self.order_id =order_id
-        self.orders = []
+
+class Order_manager:
+    def __init__(self):
+
+        self.orders = {}
 
     def add_order(self,user_name,order_id,products):
 
-        order = {'Order_id' : order_id,
-            'User_name':user_name,
-                'Products' : products,
-                }
+        order = Order(name=user_name,order_id=order_id,products=products)
 
-        self.users_list.append(order)
+        self.orders[order_id] = order  
         return f'{order_id} is added [200]'
 
-    def remove_product(self,name,user_name,order_id,products):
+    def remove_order(self,order_id):
 
-        self.orders.remove({'Order_id' : order_id,
-            'User_name':user_name,
-                'Products' : products,
-                })
+        if order_id in self.orders:
+                del self.users_dict[order_id]
+                return f'User {order_id} is removed'
+        return 'user not in list'
 
-        return f'{order_id} is removed [200]'
+        
 
-    def show_products(self):
-        return self.orders
+    def show_orders(self):
+        return list(self.orders.values())
             
 
 

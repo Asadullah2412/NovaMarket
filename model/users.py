@@ -1,53 +1,48 @@
-class Users:
-    def __init__(self,name="",user_id=""):
-        self.name = name
+class User:
+    def __init__(self,user_name,user_id):
+        self.name = user_name
         self.user_id = user_id
-        self.users_list = []
 
-    def add_user(self,name,id):
 
-        user = {'user_name' :name,
-                "user_id":id,
-                # continue here
-                }
+class User_manager:
+    def __init__(self):
+        
+        self.users_dict = {}
 
-        self.users_list.append(user)
+    def add_user(self,name,user_id):
+
+        new_user = User(user_name=name,user_id=user_id)
+
+        self.users_dict[user_id] = new_user 
         return f'{name} is added [200]'
 
-    def remove_user(self,name,id):
+    def remove_user(self,user_id):
 
-        self.users_list.remove({'user_name' :name,
-                "user_id":id,
-                # continue here
-                })
+        if user_id in self.users_dict:
+            del self.users_dict[user_id]
+            return f'User {user_id} is removed'
+        return 'user not in list'
 
-        return f'{name} is removed [200]'
-
-        
+    
 
     def show_users(self):
-        return self.users_list
+        return list(self.users_dict.values())
             
 
 
     
 # testing⚠️⚠️⚠️⚠️
 
-# user_01 = Users()
 
-# add_user = user_01.add_user(name='LALA',id=1)
-# print(add_user)
+# um = User_manager()
 
-# add_user = user_01.add_user(name='BALA',id=2)
-# print(add_user)
+# x = um.add_user(name='wala',id=3)
+# x = um.add_user(name='rala',id=4)
+# x = um.add_user(name='aala',id=5)
+# x = um.add_user(name='sala',id=6)
+# x = um.add_user(name='dala',id=7)
+# # print(x)
 
-# add_user = user_01.add_user(name='KALA',id=3)
-# print(add_user)
-
-
-# delete_user = user_01.remove_user(name='LALA',id=1)
-# print(delete_user)
-
-# users_list = user_01.show_users()
-# print(users_list)
-
+# # y = um.show_users()
+# # print(y)
+# print)
