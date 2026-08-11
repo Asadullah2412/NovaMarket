@@ -1,7 +1,7 @@
 class Users:
-    def __init__(self,name='',order_id='',products =''):
+    def __init__(self,name='',order_id='',products =[]):
         self.user_name = name
-        self.products = []
+        self.products = products
         self.order_id =order_id
         self.orders = []
 

@@ -1,21 +1,27 @@
 class Users:
     def __init__(self,name="",user_id=""):
         self.name = name
-        self.user_id = self.user_id
+        self.user_id = user_id
         self.users_list = []
 
     def add_user(self,name,id):
 
-        user = {name:id}
+        user = {'user_name' :name,
+                "user_id":id,
+                # continue here
+                }
 
         self.users_list.append(user)
-        return f'{name} is added 200'
+        return f'{name} is added [200]'
 
     def remove_user(self,name,id):
 
-        self.users_list.remove({name:id})
+        self.users_list.remove({'user_name' :name,
+                "user_id":id,
+                # continue here
+                })
 
-        return f'{name} is removed 200'
+        return f'{name} is removed [200]'
 
         
 
@@ -27,21 +33,21 @@ class Users:
     
 # testing⚠️⚠️⚠️⚠️
 
-user_01 = Users()
+# user_01 = Users()
 
-add_user = user_01.add_user(name='LALA',id=1)
-print(add_user)
+# add_user = user_01.add_user(name='LALA',id=1)
+# print(add_user)
 
-add_user = user_01.add_user(name='BALA',id=2)
-print(add_user)
+# add_user = user_01.add_user(name='BALA',id=2)
+# print(add_user)
 
-add_user = user_01.add_user(name='KALA',id=3)
-print(add_user)
+# add_user = user_01.add_user(name='KALA',id=3)
+# print(add_user)
 
 
-delete_user = user_01.remove_user(name='LALA',id=1)
-print(delete_user)
+# delete_user = user_01.remove_user(name='LALA',id=1)
+# print(delete_user)
 
-users_list = user_01.show_users()
-print(users_list)
+# users_list = user_01.show_users()
+# print(users_list)
 
