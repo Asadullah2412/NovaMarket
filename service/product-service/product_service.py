@@ -38,7 +38,7 @@ def update_product(product_data: ProductCreate):
 
 # get single product
 @ProductsRouter.get('/products/{product_id}')
-def get_product(product_id):
+def get_product(product_id:int):
     return products.get_product(product_id)
 
 #  delete product

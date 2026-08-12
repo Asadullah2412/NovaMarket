@@ -1,3 +1,5 @@
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 class Product:
     def __init__(self,product_name,product_id):
         self.name = product_name
@@ -27,8 +29,12 @@ class Products_Manager:
             self.products[product_id].product_name = new_product_name
             return f'username is updated to {new_product_name}'
     
-    def get_product(self,user_id:int):
-        return self.products[user_id]
+    def get_product(self,product_id:int):
+        if product_id in self.products:
+              
+            return self.products[product_id]
+        else:
+             return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": "Not found"})
 
     
     def show_products(self):
