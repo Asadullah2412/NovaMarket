@@ -28,6 +28,15 @@ def add_new_product(product_data: ProductCreate):
     )
     return result
 
+@ProductsRouter.put('/update_product')
+def update_user(product_data: ProductCreate):
+    result = products.update_user(new_user_name=product_data.user_name,user_id=product_data.user_id)
+    return result
+
+@ProductsRouter.get('/get_product')
+def get_user(product_id):
+    return products.get_product(product_id)
+
 @ProductsRouter.delete('/delete_products')
 def delete_product(product_id: int,):
     return products.remove_order(order_id=product_id)

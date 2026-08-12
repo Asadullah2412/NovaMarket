@@ -23,7 +23,16 @@ class Order_manager:
                 return f'User {order_id} is removed'
         return 'user not in list'
 
+    def update_order(self,order_id:int,new_products):
+    
+            # self.orders[order_id].name = new_user_name
+            self.orders[order_id].products = new_products
+
+            return f'new products are {new_products}'
         
+    
+    def get_order(self,user_id:int):
+        return self.orders[user_id]
 
     def show_orders(self):
         return list(self.orders.values())

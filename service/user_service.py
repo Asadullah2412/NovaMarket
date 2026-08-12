@@ -19,7 +19,17 @@ def all_users():
 def add_new_user(user_data :UserCreate):
     result = users.add_user(name=user_data.user_name,user_id=user_data.user_id)
     return result
-    
+
+
+@UserRouter.put('/update_user')
+def update_user(user_data :UserCreate):
+    result = users.update_user(new_user_name=user_data.user_name,user_id=user_data.user_id)
+    return result
+
+@UserRouter.get('/get_user')
+def get_user(user_id):
+    return users.get_user(user_id)
+
 
 
 @UserRouter.delete('/remove_user')

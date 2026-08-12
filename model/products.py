@@ -21,7 +21,16 @@ class Products_Manager:
                        del self.products[product_id]
                        return f'User {product_id} is removed'
         return 'product not in list'
+    
+    def update_product(self,product_id:int,new_product_name:str):
+    
+            self.products[product_id].product_name = new_product_name
+            return f'username is updated to {new_product_name}'
+    
+    def get_product(self,user_id:int):
+        return self.products[user_id]
 
+    
     def show_products(self):
         return list(self.products.values())
 

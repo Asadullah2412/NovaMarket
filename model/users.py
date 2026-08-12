@@ -13,7 +13,7 @@ class User_manager:
 
         new_user = User(user_name=name,user_id=user_id)
 
-        self.users_dict[user_id] = new_user 
+        self.users_dict[user_id] = new_user # adding as object
         return f'{name} is added [200]'
 
     def remove_user(self,user_id):
@@ -23,7 +23,13 @@ class User_manager:
             return f'User {user_id} is removed'
         return 'user not in list'
 
-    
+    def update_user(self,user_id:int,new_user_name:str):
+
+        self.users_dict[user_id].user_name = new_user_name
+        return f'username is updated to {new_user_name}'
+
+    def get_user(self,user_id:int):
+        return self.users_dict[user_id]
 
     def show_users(self):
         return list(self.users_dict.values())
