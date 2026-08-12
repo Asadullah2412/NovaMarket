@@ -15,11 +15,13 @@ orders = Order_manager()
 
 OrderRouter = APIRouter()
 
-@OrderRouter.get('/all_orders')
+#  get all products
+@OrderRouter.get('/orders')
 def all_orders():
     return orders.show_orders()
 
-@OrderRouter.post('/add_order')
+# add new products
+@OrderRouter.post('/orders')
 def add_new_order(order_data: OrderCreate):
     result = orders.add_order(
         order_id=order_data.order_id, 
@@ -28,16 +30,18 @@ def add_new_order(order_data: OrderCreate):
     )
     return result
 
-
-@OrderRouter.put('/update_order')
-def update_user(order_data:OrderCreate):
+# update order
+@OrderRouter.put('/orders/{order_id}')
+def update_order(order_data:OrderCreate):
     result = orders.update_order(order_id=order_data.order_id,new_products=order_data.products)
     return result
 
-@OrderRouter.get('/get_order')
-def get_user(order_id):
+# get single order
+@OrderRouter.get('/orders/{order_id}')
+def get_order(order_id):
     return orders.get_product(order_id)
 
-@OrderRouter.delete('/delete_order')
+# delete order
+@OrderRouter.delete('/orders/{order_id}')
 def delete_order(order_id: int,):
     return orders.remove_order(order_id=order_id)

@@ -16,11 +16,13 @@ products = Products_Manager()
     
 ProductsRouter = APIRouter()
 
-@ProductsRouter.get('/all_products')
+# get all products
+@ProductsRouter.get('/products')
 def all_products():
     return products.show_products()
 
-@ProductsRouter.post('/add_products')
+# add product
+@ProductsRouter.post('/products/')
 def add_new_product(product_data: ProductCreate):
     result = products.add_product(
         product_name=product_data.product_name,
@@ -28,15 +30,18 @@ def add_new_product(product_data: ProductCreate):
     )
     return result
 
-@ProductsRouter.put('/update_product')
-def update_user(product_data: ProductCreate):
+# update product
+@ProductsRouter.put('/products/{product_id}')
+def update_product(product_data: ProductCreate):
     result = products.update_user(new_user_name=product_data.user_name,user_id=product_data.user_id)
     return result
 
-@ProductsRouter.get('/get_product')
-def get_user(product_id):
+# get single product
+@ProductsRouter.get('/products/{product_id}')
+def get_product(product_id):
     return products.get_product(product_id)
 
-@ProductsRouter.delete('/delete_products')
+#  delete product
+@ProductsRouter.delete('/products/{product_id}')
 def delete_product(product_id: int,):
     return products.remove_order(order_id=product_id)
