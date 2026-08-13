@@ -1,5 +1,9 @@
+from fastapi.responses import JSONResponse
+from fastapi import status
+
+
 class User:
-    def __init__(self,user_name,user_id):
+    def __init__(self,user_name:str,user_id:int):
         self.name = user_name
         self.user_id = user_id
 
@@ -9,7 +13,7 @@ class User_manager:
         
         self.users_dict = {}
 
-    def add_user(self,name,user_id):
+    def add_user(self,name:str,user_id:int):
 
         new_user = User(user_name=name,user_id=user_id)
 
@@ -29,7 +33,10 @@ class User_manager:
         return f'username is updated to {new_user_name}'
 
     def get_user(self,user_id:int):
-        return self.users_dict[user_id]
+        if user_id in self.users_dict:
+            return self.users_dict[user_id]
+        else:
+            return  JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"message": "Not found"})
 
     def show_users(self):
         return list(self.users_dict.values())

@@ -28,10 +28,12 @@ async def add_new_order(order_data: OrderCreate):
     # check first if the products exists 
     # target the url of product service
     product_service_url = f"http://localhost:8002/products/{order_data.product_id}"
+    user_service_url = f"http://localhost:8001/users/{order_data.user_id}"
     #  open an http cl;ient session to make the request 
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(product_service_url)
+            product_response = await client.get(product_service_url)
+            user_response = await client.get(user_service_url)
         except httpx.RequestError:
             # Safely handle the error if the Product Service is completely turned off
             raise HTTPException(
@@ -39,11 +41,16 @@ async def add_new_order(order_data: OrderCreate):
                 detail="Product service is currently offline."
             )
     # check what the product service respomded with 
-    if response.status_code == 404:
+    if product_response.status_code == 404:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Product with ID {order_data.product_id} does not exist!"
         )
+    elif user_response.status_code == 404:
+         raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"user with ID {order_data.user_id} does not exist!"
+                )
     else:
         result = orders.add_order(
             order_id=order_data.order_id, 

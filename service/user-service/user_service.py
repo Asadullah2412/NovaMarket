@@ -29,8 +29,8 @@ def update_user(user_data :UserCreate):
 
 # get a specific user
 @UserRouter.get('/users/{user_id}')
-def get_user(user_id):
-    return users.get_user(user_id)
+def get_user(user_data:UserCreate):
+    return users.get_user(user_data.user_id)
 
 # delete user
 @UserRouter.delete('/users/{user_id}')
