@@ -1,26 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import List
-from database import model_db
-from database.user_db import engine,SessionLocal
-from sqlalchemy.orm import Session
-from typing import Annotated
+from database.dependencies import model_db
+from database.dependencies import db_dependency
 
 class UserCreate(BaseModel):
     user_id: int
     user_name: str
     # products: List[str]  
-
-model_db.Base.metadata.create_all(bind=engine)
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-db_dependency = Annotated[Session,Depends(get_db)]
 
 UserRouter = APIRouter()
 #  get all the users 

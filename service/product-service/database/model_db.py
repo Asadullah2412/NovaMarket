@@ -9,3 +9,9 @@ class User(Base):
     user_name:Mapped[str] = mapped_column(String)
 
 
+class Product(Base):
+    __tablename__ = "products"
+
+    id : Mapped[int]= mapped_column(Integer,primary_key=True,index=True)
+    product_name:Mapped[str] = mapped_column(String)
+

@@ -2,8 +2,11 @@ from typing import List
 import httpx
 
 from fastapi import APIRouter, HTTPException , status
+from sqlalchemy import select
 # from model.orders import Order_manager
-from model.orders import Order_manager
+
+from database.dependencies import model_db
+from database.dependencies import db_dependency
 from pydantic import BaseModel
 
 class OrderCreate(BaseModel):
@@ -12,19 +15,18 @@ class OrderCreate(BaseModel):
     user_id : int
     product_id: int 
 
-    
-orders = Order_manager()
 
 OrderRouter = APIRouter()
 
 #  get all products
 @OrderRouter.get('/orders')
-def all_orders():
-    return orders.show_orders()
+def all_orders(db:db_dependency):
+    orders = db.scalars(select(model_db.Product)).all()
+    return orders
 
 # add new products
 @OrderRouter.post('/orders')
-async def add_new_order(order_data: OrderCreate):
+async def add_new_order(order_data: OrderCreate,db:db_dependency):
     # check first if the products exists 
     # target the url of product service
     product_service_url = f"http://localhost:8002/products/{order_data.product_id}"
@@ -52,12 +54,17 @@ async def add_new_order(order_data: OrderCreate):
                     detail=f"user with ID {order_data.user_id} does not exist!"
                 )
     else:
-        result = orders.add_order(
-            order_id=order_data.order_id, 
-            user_name=order_data.user_name,
-            products=order_data.product_id
-        )
-    return result
+       existing_order = db.scalars(select(model_db.Order).where(model_db.Order.id == order_data.order_id)).first()
+    if existing_order:
+                raise HTTPException(status_code=400, detail="Already registered")
+               
+    db_order = model_db.Order(id=order_data.order_id,product_id=order_data.product_id,user_id=order_data.user_id
+                                 )
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+    return db_order
+   
 
 # update order
 @OrderRouter.put('/orders/{order_id}')
