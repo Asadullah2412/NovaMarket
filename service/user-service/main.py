@@ -1,13 +1,18 @@
 # User microservices ⚠️⚠️
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from user_service import UserRouter
+# from database import model_db
+
 
 
 
 app = FastAPI( title="User Management Service API",
     description="This service handles user registration, profiles, and authentication.",
     version="1.0.0")
+
+
+
 
 app.add_middleware(
     CORSMiddleware,
