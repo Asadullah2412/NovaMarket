@@ -28,6 +28,6 @@ app.include_router(router=UserRouter)
 
 
 
-# uvicorn main:app --reload --port 8001
+# uvicorn main:app --reload --port 9001
 # cd service/user-service
 # to run

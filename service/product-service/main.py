@@ -25,5 +25,5 @@ app.include_router(router=ProductsRouter)
 
 
 
-# uvicorn main:app --reload --port 8002
+# uvicorn main:app --reload --port 9002
 # to run

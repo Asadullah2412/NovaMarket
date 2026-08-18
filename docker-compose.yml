@@ -17,7 +17,7 @@ services:
       retries: 10
 
   kong-migrations:
-    image: kong/kong-gateway:3.15.0.1
+    image: kong:3.9
     container_name: kong-migrations
     depends_on:
       kong-database:
@@ -31,7 +31,7 @@ services:
     command: kong migrations bootstrap
 
   kong:
-    image: kong/kong-gateway:3.15.0.1
+    image: kong:3.9
     container_name: kong
     restart: unless-stopped
     depends_on:
@@ -55,6 +55,29 @@ services:
       - "8443:8443"
       - "8001:8001"
       - "8444:8444"
+  users:
+    build:
+      context: ./service/user-service
+    container_name: novamarket-users
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:asad123@users-db:5432/users
+    ports:
+      - "9001:9001"
+    depends_on:
+      - users-db
+
+  users-db:
+    image: postgres:17
+    container_name: novamarket-users-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: asad123
+      POSTGRES_DB: users
+    volumes:
+      - users-db-data:/var/lib/postgresql/data
 
 volumes:
   kong-db-data:
+  users-db-data:
