@@ -9,7 +9,7 @@ from database.dependencies import model_db
 from database.dependencies import db_dependency
 from pydantic import BaseModel
 
-class OrderCreate(BaseModel):
+class OrderCreate(BaseModel): 
     order_id: int
     user_name: str
     user_id : int
@@ -21,7 +21,7 @@ OrderRouter = APIRouter()
 #  get all products
 @OrderRouter.get('/orders')
 def all_orders(db:db_dependency):
-    orders = db.scalars(select(model_db.Product)).all()
+    orders = db.scalars(select(model_db.Order)).all()
     return orders
 
 # add new products
@@ -68,16 +68,29 @@ async def add_new_order(order_data: OrderCreate,db:db_dependency):
 
 # update order
 @OrderRouter.put('/orders/{order_id}')
-def update_order(order_data:OrderCreate):
-    result = orders.update_order(order_id=order_data.order_id,new_products=order_data.products)
-    return result
+def update_order(order_data:OrderCreate,db:db_dependency):
+    order = db.get(model_db.Order,order_data.order_id)
+    if not order:
+         raise HTTPException(status_code=404,detail="Order not found")
+    order.product_id = order_data.product_id
+    db.commit()
+    db.refresh(order)
+    return order
 
 # get single order
 @OrderRouter.get('/orders/{order_id}')
-def get_order(order_id):
-    return orders.get_product(order_id)
+def get_order(order_id:int, db:db_dependency):
+    order = db.get(model_db.Order,order_id)
+    if not order:
+         raise HTTPException(status_code=404, detail="Order not found")
+    return order
 
 # delete order
 @OrderRouter.delete('/orders/{order_id}')
-def delete_order(order_id: int,):
-    return orders.remove_order(order_id=order_id)
+def delete_order(order_id: int,db:db_dependency):
+    order = db.get(model_db.Order,order_id)
+    if not order:
+         raise HTTPException(status_code=404,detail="order not found")
+    db.delete(order)
+    db.commit()
+    return None

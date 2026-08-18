@@ -25,7 +25,7 @@ def all_products(db:db_dependency):
 
 # add product
 @ProductsRouter.post('/products/')
-def add_new_product(product_data: ProductCreate,db:db_dependency):
+def add_new_product(product_data: ProductCreate,db:db_dependency): 
     existing_product = db.scalars(select(model_db.Product).where(model_db.Product.id == product_data.product_id)).first()
     if existing_product:
             raise HTTPException(status_code=400, detail="Already registered")
@@ -65,3 +65,5 @@ def delete_product(product_id: int,db:db_dependency):
     db.delete(product)
     db.commit()
     return None
+
+
