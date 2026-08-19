@@ -77,7 +77,53 @@ services:
       POSTGRES_DB: users
     volumes:
       - users-db-data:/var/lib/postgresql/data
+  products:
+    build:
+      context: ./service/product-service
+    container_name: novamarket-products
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:asad123@products-db:5432/products
+    ports:
+      - "9002:9002"
+    depends_on:
+      - products-db
+
+  products-db:
+    image: postgres:17
+    container_name: novamarket-products-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: asad123
+      POSTGRES_DB: products
+    volumes:
+      - products-db-data:/var/lib/postgresql/data
+  orders:
+    build:
+      context: ./service/order-service
+    container_name: novamarket-orders
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:asad123@orders-db:5432/orders
+    ports:
+      - "9003:9003"
+    depends_on:
+      - orders-db
+
+  orders-db:
+    image: postgres:17
+    container_name: novamarket-orders-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: asad123
+      POSTGRES_DB: orders
+    volumes:
+      - orders-db-data:/var/lib/postgresql/data
 
 volumes:
   kong-db-data:
   users-db-data:
+  products-db-data:
+  orders-db-data:
