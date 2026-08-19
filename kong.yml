@@ -1,0 +1,29 @@
+_format_version: "3.0"
+
+services:
+  - name: users
+    url: http://users:9001
+
+    routes:
+      - name: users-route
+        paths:
+          - /users
+        strip_path: false
+
+  - name: products
+    url: http://products:9002
+
+    routes:
+      - name: products-route
+        paths:
+          - /products
+        strip_path: false
+  
+  - name: orders
+    url: http://orders:9003
+
+    routes:
+      - name: orders-route
+        paths:
+          - /orders
+        strip_path: false
