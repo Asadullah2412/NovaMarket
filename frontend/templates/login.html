@@ -40,7 +40,11 @@
             const formData = new URLSearchParams();
             formData.append('username', username);
             formData.append('password', password);
-
+            function parseJwt(token) {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                return JSON.parse(window.atob(base64));
+            }
             try {
                 const response = await fetch(`${API_URL}/users/token`, {
                     method: 'POST',
@@ -50,7 +54,15 @@
                 const data = await response.json();
                 if (response.ok) {
                     localStorage.setItem('access_token', data.access_token);
-                    window.location.href = "/dashboard";
+                    // window.location.href = "dashboard";
+
+                    const userData = parseJwt(data.access_token);
+
+                    if (userData.role === 'seller') {
+                        window.location.href = "/seller-dashboard";
+                    } else {
+                        window.location.href = "/buyer-dashboard";
+                    }
                 } else {
                     alert("Authorization Fault: " + (data.detail || "Verification failed"));
                 }

@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NovaMarket - Seller Dashboard</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        .modal {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 460px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .close-btn {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .close-btn:hover {
+            color: var(--danger-color);
+        }
+
+        .seller-error {
+            border-left-color: var(--danger-color) !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="dashboardContainer" class="container dashboard-wide">
+
+        <div class="dashboard-header">
+            <div>
+                <h2 id="welcomeTitle">Control Console</h2>
+
+                <div style="color: var(--text-secondary); font-size:14px; margin-top:4px;">
+                    Merchant Control Matrix Active
+                </div>
+            </div>
+
+            <div class="role-badge" id="userRoleBadge"
+                style="border-color: rgba(255, 147, 15, 0.3); background: rgba(255, 147, 15, 0.1); color: #ff930f;">
+                System Node: Seller
+            </div>
+        </div>
+
+        <div
+            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:16px; flex-wrap:wrap;">
+            <h3>Seller Management Console</h3>
+
+            <button type="button" onclick="openProductModal()"
+                style="background: linear-gradient(135deg, #ff930f 0%, #ff521b 100%); color:#fff; width:auto; margin:0; padding:10px 20px;">
+                ➕ Add New Product
+            </button>
+        </div>
+
+        <div class="grid-dummy" id="sellerInventoryGrid">
+            <!-- Seller inventory rows stream here -->
+        </div>
+
+        <div style="margin-top:40px; display:flex; justify-content:flex-end;">
+            <button type="button" class="logout-btn" onclick="logout()">
+                Terminate Session
+            </button>
+        </div>
+
+    </div>
+
+    <!-- PRODUCT MODAL -->
+    <div id="productModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h3 style="color:#ff930f;">Inject Product Entity</h3>
+
+                <button type="button" class="close-btn" onclick="closeProductModal()" aria-label="Close product modal">
+                    &times;
+                </button>
+            </div>
+
+            <form id="productForm">
+
+                <div class="form-group">
+                    <label for="prodTitle">Product Name</label>
+                    <input type="text" id="prodTitle" required placeholder="e.g. Mechanical Keyboard">
+                </div>
+
+                <div class="form-group">
+                    <label for="prodDesc">Description</label>
+                    <input type="text" id="prodDesc" required placeholder="Describe your product details...">
+                </div>
+
+                <div class="form-group" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+
+                    <div>
+                        <label for="prodPrice">Price ($)</label>
+                        <input type="number" id="prodPrice" step="0.01" min="0" required placeholder="99.99">
+                    </div>
+
+                    <div>
+                        <label for="prodQty">Quantity</label>
+                        <input type="number" id="prodQty" min="0" required placeholder="10">
+                    </div>
+
+                </div>
+
+                <button type="submit" style="background:linear-gradient(135deg, #ff930f 0%, #ff521b 100%); color:#fff;">
+                    Publish to Marketplace
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script>
+        /*
+         * ============================================================
+         * NovaMarket Seller Dashboard
+         * ============================================================
+         *
+         * Browser
+         *    ↓
+         * Kong Gateway :8000
+         *    ↓
+         * Products Service :9002
+         *    ↓
+         * PostgreSQL
+         *
+         * IMPORTANT:
+         * Do NOT change PRODUCTS_API_URL to port 9002 if Kong is
+         * supposed to be the public API entry point.
+         * ============================================================
+         */
+
+        const PRODUCTS_API_URL = "http://localhost:8000";
+
+        // ------------------------------------------------------------
+        // Utility functions
+        // ------------------------------------------------------------
+
+        function getAccessToken() {
+            return localStorage.getItem("access_token");
+        }
+
+        function logout() {
+            localStorage.removeItem("access_token");
+            window.location.href = "/login";
+        }
+
+        function parseJwt(token) {
+            if (!token) {
+                return null;
+            }
+
+            try {
+                const parts = token.split(".");
+
+                if (parts.length !== 3) {
+                    throw new Error("Invalid JWT format");
+                }
+
+                const base64Url = parts[1];
+
+                const base64 = base64Url
+                    .replace(/-/g, "+")
+                    .replace(/_/g, "/");
+
+                const paddedBase64 =
+                    base64 + "=".repeat((4 - base64.length % 4) % 4);
+
+                const jsonPayload = decodeURIComponent(
+                    window.atob(paddedBase64)
+                        .split("")
+                        .map(function (c) {
+                            return "%" +
+                                ("00" + c.charCodeAt(0).toString(16))
+                                    .slice(-2);
+                        })
+                        .join("")
+                );
+
+                return JSON.parse(jsonPayload);
+
+            } catch (error) {
+                console.error("JWT Decode Fault:", error);
+                return null;
+            }
+        }
+
+        function getCurrentUser() {
+            const token = getAccessToken();
+
+            if (!token) {
+                return null;
+            }
+
+            return parseJwt(token);
+        }
+
+        function getSellerIdentifier(userData) {
+            if (!userData) {
+                return null;
+            }
+
+            /*
+             * Prefer username because the current product response
+             * uses `seller_name`.
+             *
+             * Fall back to `sub` in case your JWT only contains sub.
+             */
+            return userData.username || userData.seller_name || userData.sub || null;
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement("div");
+            div.textContent = value ?? "";
+            return div.innerHTML;
+        }
+
+        function showInventoryMessage(message, isError = false) {
+            const inventoryGrid =
+                document.getElementById("sellerInventoryGrid");
+
+            inventoryGrid.innerHTML = `
+                <div class="card ${isError ? "seller-error" : ""}"
+                    style="grid-column:1 / -1; text-align:center; padding:40px;">
+                    <h4>${isError ? "⚠️ Inventory Error" : "🏬 Your Shop is Empty"}</h4>
+                    <p>${escapeHtml(message)}</p>
+                </div>
+            `;
+        }
+
+        async function readErrorResponse(response) {
+            try {
+                const data = await response.json();
+
+                if (typeof data === "string") {
+                    return data;
+                }
+
+                return data.detail ||
+                    data.message ||
+                    data.error ||
+                    `HTTP ${response.status}`;
+            } catch {
+                return `HTTP ${response.status}`;
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Product modal
+        // ------------------------------------------------------------
+
+        function openProductModal() {
+            document
+                .getElementById("productModal")
+                .classList.remove("hidden");
+
+            document.getElementById("prodTitle").focus();
+        }
+
+        function closeProductModal() {
+            document
+                .getElementById("productModal")
+                .classList.add("hidden");
+
+            document
+                .getElementById("productForm")
+                .reset();
+        }
+
+        // Close modal when clicking outside the modal content.
+        document.getElementById("productModal").addEventListener("click", function (event) {
+            if (event.target === this) {
+                closeProductModal();
+            }
+        });
+
+        // Close modal with Escape.
+        document.addEventListener("keydown", function (event) {
+            if (event.key === "Escape") {
+                const modal = document.getElementById("productModal");
+
+                if (!modal.classList.contains("hidden")) {
+                    closeProductModal();
+                }
+            }
+        });
+
+        // ------------------------------------------------------------
+        // Load seller inventory
+        // ------------------------------------------------------------
+
+        async function loadSellerInventory(currentSeller) {
+
+            const inventoryGrid =
+                document.getElementById("sellerInventoryGrid");
+
+            const token = getAccessToken();
+
+            if (!token) {
+                logout();
+                return;
+            }
+
+            if (!currentSeller) {
+                showInventoryMessage(
+                    "Could not determine the seller identity from the current session.",
+                    true
+                );
+                return;
+            }
+
+            inventoryGrid.innerHTML = `
+                <div class="card"
+                    style="grid-column:1 / -1; text-align:center; padding:40px;">
+                    <h4>Loading Inventory...</h4>
+                    <p>Synchronizing with the marketplace API.</p>
+                </div>
+            `;
+
+            try {
+
+                /*
+                 * IMPORTANT FIX:
+                 * The GET request now sends the JWT.
+                 *
+                 * This keeps authentication consistent with POST
+                 * and DELETE requests.
+                 */
+                const response = await fetch(
+                    `${PRODUCTS_API_URL}/products`,
+                    {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (response.status === 401 || response.status === 403) {
+                    console.warn(
+                        "Seller session rejected by API:",
+                        response.status
+                    );
+
+                    logout();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorMessage =
+                        await readErrorResponse(response);
+
+                    throw new Error(errorMessage);
+                }
+
+                const products = await response.json();
+
+                if (!Array.isArray(products)) {
+                    throw new Error(
+                        "Products API returned an invalid response format."
+                    );
+                }
+
+                inventoryGrid.innerHTML = "";
+
+                /*
+                 * Current backend contract:
+                 * products contain seller_name.
+                 *
+                 * The seller identifier comes from the JWT.
+                 */
+                const myProducts = products.filter(product =>
+                    String(product.seller_name ?? "") ===
+                    String(currentSeller)
+                );
+
+                if (myProducts.length === 0) {
+                    showInventoryMessage(
+                        "You haven't posted any items yet. Click the \"Add New Product\" button above to upload a listing."
+                    );
+                    return;
+                }
+
+                myProducts.forEach(product => {
+
+                    const productCard =
+                        document.createElement("div");
+
+                    productCard.className = "card";
+                    productCard.style.borderLeftColor = "#ff930f";
+
+                    const price =
+                        Number(product.price);
+
+                    const formattedPrice =
+                        Number.isFinite(price)
+                            ? price.toFixed(2)
+                            : "0.00";
+
+                    const quantity =
+                        Number(product.quantity);
+
+                    const formattedQuantity =
+                        Number.isFinite(quantity)
+                            ? quantity
+                            : 0;
+
+                    const title =
+                        escapeHtml(product.title);
+
+                    const description =
+                        escapeHtml(product.description);
+
+                    productCard.innerHTML = `
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:flex-start;
+                            gap:16px;
+                        ">
+                            <h4 style="color:#fff;">
+                                ${title}
+                            </h4>
+
+                            <span style="
+                                font-size:12px;
+                                font-weight:700;
+                                color:#ff930f;
+                                background:rgba(255,147,15,0.1);
+                                padding:2px 8px;
+                                border-radius:4px;
+                                white-space:nowrap;
+                            ">
+                                $${formattedPrice}
+                            </span>
+                        </div>
+
+                        <p style="
+                            margin:12px 0;
+                            min-height:42px;
+                        ">
+                            ${description}
+                        </p>
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            gap:16px;
+                            font-size:12px;
+                            color:var(--text-secondary);
+                            border-top:1px solid var(--border-color);
+                            padding-top:12px;
+                        ">
+
+                            <span>
+                                Active Stock Units:
+                                <b style="color:#ff930f">
+                                    ${formattedQuantity}
+                                </b>
+                            </span>
+
+                            <button
+                                type="button"
+                                style="
+                                    width:auto;
+                                    margin:0;
+                                    padding:0;
+                                    background:transparent;
+                                    border:none;
+                                    color:var(--danger-color);
+                                    cursor:pointer;
+                                    font-weight:600;
+                                "
+                                onclick="deleteProductEntity(${Number(product.id)})"
+                            >
+                                🗑️ Delete
+                            </button>
+
+                        </div>
+                    `;
+
+                    inventoryGrid.appendChild(productCard);
+                });
+
+            } catch (error) {
+
+                console.error(
+                    "Inventory Channel Node Fault:",
+                    error
+                );
+
+                showInventoryMessage(
+                    error.message ||
+                    "Unable to connect to the marketplace API.",
+                    true
+                );
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Create product
+        // ------------------------------------------------------------
+
+        document
+            .getElementById("productForm")
+            .addEventListener("submit", async function (event) {
+
+                event.preventDefault();
+
+                const token = getAccessToken();
+
+                if (!token) {
+                    logout();
+                    return;
+                }
+
+                const userData = parseJwt(token);
+
+                if (!userData) {
+                    alert(
+                        "Session context missing. Re-authenticating."
+                    );
+
+                    logout();
+                    return;
+                }
+
+                const title =
+                    document.getElementById("prodTitle").value.trim();
+
+                const description =
+                    document.getElementById("prodDesc").value.trim();
+
+                const price =
+                    Number(document.getElementById("prodPrice").value);
+
+                const quantity =
+                    Number(document.getElementById("prodQty").value);
+
+                if (!title || !description) {
+                    alert("Product name and description are required.");
+                    return;
+                }
+
+                if (!Number.isFinite(price) || price < 0) {
+                    alert("Please enter a valid product price.");
+                    return;
+                }
+
+                if (!Number.isInteger(quantity) || quantity < 0) {
+                    alert("Please enter a valid whole-number quantity.");
+                    return;
+                }
+
+                /*
+                 * Do NOT send seller_name from the browser.
+                 *
+                 * The backend should derive the authenticated seller
+                 * from the JWT.
+                 */
+                const payload = {
+                    title: title,
+                    description: description,
+                    price: price,
+                    quantity: quantity
+                };
+
+                try {
+
+                    const response = await fetch(
+                        `${PRODUCTS_API_URL}/products`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`,
+                                "Accept": "application/json"
+                            },
+
+                            body: JSON.stringify(payload)
+                        }
+                    );
+
+                    if (response.status === 401 ||
+                        response.status === 403) {
+
+                        alert(
+                            "Your session has expired or is not authorized."
+                        );
+
+                        logout();
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        const errorMessage =
+                            await readErrorResponse(response);
+
+                        alert(
+                            "Injection Fault: " +
+                            errorMessage
+                        );
+
+                        return;
+                    }
+
+                    closeProductModal();
+
+                    const sellerIdentifier =
+                        getSellerIdentifier(userData);
+
+                    await loadSellerInventory(
+                        sellerIdentifier
+                    );
+
+                } catch (error) {
+
+                    console.error(
+                        "Product creation failed:",
+                        error
+                    );
+
+                    alert(
+                        "Network pipeline connection lost during catalog injection."
+                    );
+                }
+            });
+
+        // ------------------------------------------------------------
+        // Delete product
+        // ------------------------------------------------------------
+
+        async function deleteProductEntity(id) {
+
+            if (!Number.isInteger(Number(id))) {
+                console.error(
+                    "Invalid product ID:",
+                    id
+                );
+                return;
+            }
+
+            const confirmed =
+                confirm(
+                    "Are you sure you want to completely remove this listing?"
+                );
+
+            if (!confirmed) {
+                return;
+            }
+
+            const token = getAccessToken();
+
+            if (!token) {
+                logout();
+                return;
+            }
+
+            const userData = parseJwt(token);
+
+            if (!userData) {
+                logout();
+                return;
+            }
+
+            try {
+
+                const response = await fetch(
+                    `${PRODUCTS_API_URL}/products/${encodeURIComponent(id)}`,
+                    {
+                        method: "DELETE",
+
+                        headers: {
+                            "Authorization": `Bearer ${token}`,
+                            "Accept": "application/json"
+                        }
+                    }
+                );
+
+                if (response.status === 401 ||
+                    response.status === 403) {
+
+                    alert(
+                        "Your session has expired or is not authorized."
+                    );
+
+                    logout();
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorMessage =
+                        await readErrorResponse(response);
+
+                    alert(
+                        "Could not remove the item: " +
+                        errorMessage
+                    );
+
+                    return;
+                }
+
+                const sellerIdentifier =
+                    getSellerIdentifier(userData);
+
+                await loadSellerInventory(
+                    sellerIdentifier
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Product deletion failed:",
+                    error
+                );
+
+                alert(
+                    "Network communication error."
+                );
+            }
+        }
+
+        // ------------------------------------------------------------
+        // Initialization
+        // ------------------------------------------------------------
+
+        (function initializeDashboard() {
+
+            const token = getAccessToken();
+
+            if (!token) {
+                window.location.href = "/login";
+                return;
+            }
+
+            const userData = parseJwt(token);
+
+            if (!userData) {
+                console.warn(
+                    "Invalid token context found during initialization."
+                );
+
+                logout();
+                return;
+            }
+
+            const sellerIdentifier =
+                getSellerIdentifier(userData);
+
+            if (!sellerIdentifier) {
+                console.warn(
+                    "JWT does not contain a usable seller identifier.",
+                    userData
+                );
+
+                showInventoryMessage(
+                    "The current JWT does not contain a seller username or subject identifier.",
+                    true
+                );
+
+                return;
+            }
+
+            document.getElementById("welcomeTitle").innerText =
+                `Welcome, ${sellerIdentifier}`;
+
+            /*
+             * Display the role if it exists in the JWT.
+             */
+            if (userData.role) {
+                document.getElementById("userRoleBadge").innerText =
+                    `System Node: ${userData.role}`;
+            }
+
+            loadSellerInventory(
+                sellerIdentifier
+            );
+
+        })();
+
+    </script>
+
+</body>
+
+</html>

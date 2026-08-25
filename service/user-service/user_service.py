@@ -65,10 +65,6 @@ def login_for_access_token(db:db_dependency,form_data:OAuth2PasswordRequestForm 
     return {'access_token':access_token,"token_type":"bearer"}
 
 
-
-
-
-
     
 # update user
 @UserRouter.put('/users/{user_id}') 

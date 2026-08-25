@@ -44,4 +44,11 @@ def get_login_page():
 def get_dashboard_page():
     return FileResponse("templates/dashboard.html")
 
+@app.get("/seller-dashboard", response_class=FileResponse)
+def get_seller_page():
+    return FileResponse("templates/seller_dashboard.html")
+
+@app.get("/buyer-dashboard", response_class=FileResponse)
+def get_buyer_page():
+    return FileResponse("templates/buyer_dashboard.html")
 # uvicorn main:app --reload --port 5000
