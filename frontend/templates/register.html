@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaMarket - Create Account</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://googleapis.com" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Get Started</h2>
+        <div class="subtitle">Create your NovaMarket credential pipeline</div>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="regUsername">Username</label>
+                <input type="text" id="regUsername" required placeholder="e.g. merchant_alex">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password</label>
+                <input type="password" id="regPassword" required placeholder="••••••••••••">
+            </div>
+            <div class="form-group">
+                <label for="regRole">Account Paradigm</label>
+                <select id="regRole">
+                    <option value="buyer">Procurement (Buyer)</option>
+                    <option value="seller">Distribution (Seller)</option>
+                </select>
+            </div>
+            <button type="submit">Register Account</button>
+        </form>
+        <div class="switch-link">
+            Already registered? <a href="login">Sign in here</a>
+
+
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000";
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_name: username, password: password, role: role })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.href = "/login";
+                } else {
+                    alert("Error: " + (data.detail || "Registration failed"));
+                }
+            } catch (err) {
+                alert("Could not connect to backend engine instance.");
+            }
+        });
+    </script>
+</body>
+
+</html>

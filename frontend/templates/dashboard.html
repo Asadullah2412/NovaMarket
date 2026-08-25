@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaMarket - Control Matrix</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://googleapis.com" rel="stylesheet">
+</head>
+
+<body>
+    <div id="dashboardContainer" class="container dashboard-wide">
+        <div class="dashboard-header">
+            <div>
+                <h2 id="welcomeTitle">Control Console</h2>
+                <div style="color: var(--text-secondary); font-size:14px; margin-top:4px;">Session context successfully
+                    loaded</div>
+            </div>
+            <div class="role-badge" id="userRoleBadge">Initializing...</div>
+        </div>
+
+        <!-- 🛒 BUYER INTERFACE SECTION -->
+        <div id="buyerUI" class="hidden">
+            <div class="grid-dummy">
+                <div class="card">
+                    <h4>📦 Product Catalog Matrix</h4>
+                    <p>Query general inventory lines directly across downstream decoupled storage structures.</p>
+                    <button>Fetch Storefront Map</button>
+                </div>
+                <div class="card">
+                    <h4>🛒 Active Order Logs</h4>
+                    <p>0 processing pipelines open. Stream current order tracking payloads asynchronously.</p>
+                    <button>Review Shipments</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏢 SELLER INTERFACE SECTION -->
+        <div id="sellerUI" class="hidden">
+            <div class="grid-dummy">
+                <div class="card">
+                    <h4>➕ Inject Product Entity</h4>
+                    <p>Push brand new structured item payloads down to the standalone product database microservice.</p>
+                    <button
+                        style="background: linear-gradient(135deg, #ff930f 0%, #ff521b 100%); color:#fff;">Initialize
+                        Stream</button>
+                </div>
+                <div class="card">
+                    <h4>📈 Revenue Ledger Analysis</h4>
+                    <p>Inspect calculated balance payouts, node cost factor processing logs, and ledger margins.</p>
+                    <button style="background: linear-gradient(135deg, #ff930f 0%, #ff521b 100%); color:#fff;">Open
+                        Matrix Ledger</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; display: flex; justify-content: flex-end;">
+            <button class="logout-btn" onclick="logout()">Terminate Session</button>
+        </div>
+    </div>
+
+    <script>
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            window.location.href = "/login";
+        } else {
+            const userData = parseJwt(token);
+            if (userData && userData.sub) {
+                document.getElementById('welcomeTitle').innerText = `Welcome, ${userData.sub}`;
+
+                // Determine layout mapping
+                if (userData.role === 'seller') {
+                    document.getElementById('userRoleBadge').innerText = 'System Node: Seller';
+                    document.getElementById('userRoleBadge').style.borderColor = 'rgba(255, 147, 15, 0.3)';
+                    document.getElementById('userRoleBadge').style.background = 'rgba(255, 147, 15, 0.1)';
+                    document.getElementById('userRoleBadge').style.color = '#ff930f';
+                    document.getElementById('sellerUI').classList.remove('hidden');
+                } else {
+                    document.getElementById('userRoleBadge').innerText = 'System Node: Buyer';
+                    document.getElementById('buyerUI').classList.remove('hidden');
+                }
+            } else {
+                logout();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = "/login";
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaMarket - Authorization Gateway</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://googleapis.com" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <h2>Welcome Back</h2>
+        <div class="subtitle">Provide secure credentials to generate session tokens</div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginUsername">System Identifier</label>
+                <input type="text" id="loginUsername" required placeholder="Username">
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Security Hash</label>
+                <input type="password" id="loginPassword" required placeholder="Password">
+            </div>
+            <button type="submit">Generate Access Token</button>
+        </form>
+        <div class="switch-link">
+            Need an environment account? <a href="register">Sign up</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000";
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const formData = new URLSearchParams();
+            formData.append('username', username);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(`${API_URL}/users/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access_token);
+                    window.location.href = "/dashboard";
+                } else {
+                    alert("Authorization Fault: " + (data.detail || "Verification failed"));
+                }
+            } catch (err) {
+                alert("Connection handshake timed out with authorization nodes.");
+            }
+        });
+    </script>
+</body>
+
+</html>
