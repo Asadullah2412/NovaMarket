@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 URL_DATABASE = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:asad123@localhost:5432/products"
+    "postgresql://postgres:asad123@localhost:5432/orders"
 )
 
 # creating engine 
