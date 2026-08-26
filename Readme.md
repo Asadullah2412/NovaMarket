@@ -1,9 +1,5 @@
-Absolutely. This project deserves a README that makes it clear **this isn't "yet another CRUD ecommerce app"** — it's a playground for learning API engineering, microservices, authentication, Kong, databases, and distributed-system behavior.
 
-Here's a polished `README.md` you can drop straight into the repository:
-
-````markdown
-# ⚡ NEON//MARKET
+# ⚡ NOVA//MARKET
 
 > **A cyberpunk-inspired API engineering playground built to explore microservices, API gateways, authentication, authorization, databases, and distributed systems.**
 
@@ -113,14 +109,14 @@ Responsible for user-related functionality.
 
 Examples:
 
-* User registration
-* User management
-* Authentication
-* Authorization
-* Password hashing
-* JWT handling
-* User roles
-* Account state
+- User registration
+- User management
+- Authentication
+- Authorization
+- Password hashing
+- JWT handling
+- User roles
+- Account state
 
 **Port:** `8001`
 
@@ -132,11 +128,11 @@ Responsible for product-related functionality.
 
 Examples:
 
-* Create products
-* Retrieve products
-* Update products
-* Delete products
-* Product lookup
+- Create products
+- Retrieve products
+- Update products
+- Delete products
+- Product lookup
 
 **Port:** `8002`
 
@@ -148,11 +144,11 @@ Responsible for order-related functionality.
 
 Examples:
 
-* Creating orders
-* Retrieving orders
-* Validating users
-* Validating products
-* Communicating with other services
+- Creating orders
+- Retrieving orders
+- Validating users
+- Validating products
+- Communicating with other services
 
 **Port:** `8003`
 
@@ -199,18 +195,18 @@ Kong
 
 This provides a playground for experimenting with:
 
-* Routing
-* Authentication
-* Authorization
-* Rate limiting
-* Request transformation
-* CORS
-* Logging
-* Consumers
-* JWT
-* API keys
-* Upstreams
-* Health checks
+- Routing
+- Authentication
+- Authorization
+- Rate limiting
+- Request transformation
+- CORS
+- Logging
+- Consumers
+- JWT
+- API keys
+- Upstreams
+- Health checks
 
 ---
 
@@ -323,10 +319,10 @@ Instead of merely reading about distributed-system failures, we can actually cre
 
 NEON//MARKET also contains a lightweight Python-based UI using:
 
-* FastAPI
-* HTML
-* CSS
-* Jinja2
+- FastAPI
+- HTML
+- CSS
+- Jinja2
 
 The UI is intentionally simple.
 
@@ -380,77 +376,77 @@ The project is being used to explore:
 
 ### API Engineering
 
-* REST API design
-* HTTP methods
-* HTTP status codes
-* Request/response models
-* Headers
-* Cookies
-* Idempotency
-* Error handling
-* API versioning
-* Pagination
-* Validation
+- REST API design
+- HTTP methods
+- HTTP status codes
+- Request/response models
+- Headers
+- Cookies
+- Idempotency
+- Error handling
+- API versioning
+- Pagination
+- Validation
 
 ### Microservices
 
-* Service boundaries
-* Database-per-service
-* Service-to-service communication
-* Failure handling
-* Independent services
-* Distributed-system behavior
+- Service boundaries
+- Database-per-service
+- Service-to-service communication
+- Failure handling
+- Independent services
+- Distributed-system behavior
 
 ### API Gateway
 
-* Routing
-* Authentication
-* Authorization
-* Rate limiting
-* CORS
-* Consumers
-* Plugins
-* Upstreams
-* Load balancing
+- Routing
+- Authentication
+- Authorization
+- Rate limiting
+- CORS
+- Consumers
+- Plugins
+- Upstreams
+- Load balancing
 
 ### Security
 
-* Password hashing
-* JWT
-* OAuth2
-* Authentication
-* Authorization
-* Protected endpoints
-* Role-based access
+- Password hashing
+- JWT
+- OAuth2
+- Authentication
+- Authorization
+- Protected endpoints
+- Role-based access
 
 ### Infrastructure
 
-* Docker
-* Docker Compose
-* PostgreSQL containers
-* Service networking
-* Container debugging
+- Docker
+- Docker Compose
+- PostgreSQL containers
+- Service networking
+- Container debugging
 
 ### Reliability
 
 Future experiments include:
 
-* Timeouts
-* Retries
-* Circuit breakers
-* Health checks
-* Graceful failure
-* Idempotency
+- Timeouts
+- Retries
+- Circuit breakers
+- Health checks
+- Graceful failure
+- Idempotency
 
 ### Observability
 
 Future exploration includes:
 
-* Structured logging
-* Request IDs
-* Metrics
-* Distributed tracing
-* Performance monitoring
+- Structured logging
+- Request IDs
+- Metrics
+- Distributed tracing
+- Performance monitoring
 
 ---
 
@@ -514,9 +510,9 @@ This becomes an opportunity to experiment with:
 
 This introduces:
 
-* Timeouts
-* Retries
-* Circuit breakers
+- Timeouts
+- Retries
+- Circuit breakers
 
 ---
 
