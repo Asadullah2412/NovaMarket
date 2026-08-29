@@ -1,156 +1,890 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovaMarket - Control Matrix</title>
+
+    ```
     <link rel="stylesheet" href="static/style.css">
-    <link href="https://googleapis.com" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    ```
+
 </head>
 
 <body>
+
+    ```
     <div id="dashboardContainer" class="container dashboard-wide">
+
         <div class="dashboard-header">
+
             <div>
                 <h2 id="welcomeTitle">Control Console</h2>
-                <div style="color: var(--text-secondary); font-size:14px; margin-top:4px;">Session context successfully
-                    loaded</div>
-            </div>
-            <div class="role-badge" id="userRoleBadge">Initializing...</div>
-        </div>
 
-        <!-- 🛒 BUYER INTERFACE SECTION -->
-        <div id="buyerUI" class="hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
-                <h3>Global Marketplace Inventory</h3>
-                <button onclick="loadMarketplaceProducts()"
-                    style="width:auto; margin:0; padding:8px 16px; font-size:12px;">🔄 Refresh Catalog</button>
-            </div>
-
-            <!-- JavaScript will wipe this container and dump real database rows inside here -->
-            <div class="grid-dummy" id="marketplaceGrid">
-                <div class="card">
-                    <h4>Loading Products...</h4>
-                    <p>Connecting to catalog database streams...</p>
+                <div style="color: var(--text-secondary); font-size:14px; margin-top:4px;">
+                    Session context successfully loaded
                 </div>
             </div>
+
+            <div class="role-badge" id="userRoleBadge">
+                Initializing...
+            </div>
+
         </div>
-        <div style="margin-top: 40px; display: flex; justify-content: flex-end;">
-            <button class="logout-btn" onclick="logout()">Terminate Session</button>
+
+
+        <!-- 🛒 BUYER INTERFACE SECTION -->
+
+        <div id="buyerUI" class="hidden">
+
+            <!-- MARKETPLACE -->
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+
+                <h3>Global Marketplace Inventory</h3>
+
+                <button onclick="loadMarketplaceProducts()"
+                    style="width:auto; margin:0; padding:8px 16px; font-size:12px;">
+                    🔄 Refresh Catalog
+                </button>
+
+            </div>
+
+
+            <div class="grid-dummy" id="marketplaceGrid">
+
+                <div class="card">
+
+                    <h4>Loading Products...</h4>
+
+                    <p>
+                        Connecting to catalog database streams...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ORDERS SECTION -->
+
+            <div style="margin-top:50px;">
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+
+                    <h3>📦 My Orders</h3>
+
+                    <button onclick="loadMyOrders()" style="width:auto; margin:0; padding:8px 16px; font-size:12px;">
+                        🔄 Refresh Orders
+                    </button>
+
+                </div>
+
+
+                <div class="grid-dummy" id="ordersGrid">
+
+                    <div class="card">
+
+                        <h4>Loading Orders...</h4>
+
+                        <p>
+                            Retrieving your order history...
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
         </div>
+
+
+        <!-- LOGOUT -->
+
+        <div style="margin-top:40px; display:flex; justify-content:flex-end;">
+
+            <button class="logout-btn" onclick="logout()">
+                Terminate Session
+            </button>
+
+        </div>
+
     </div>
 
 
     <script>
-        // Adjust these to match your exact microservice routing map ports
-        const PRODUCTS_API_URL = "http://localhost:8000";
+
+        /*
+         * ============================================================
+         * API CONFIGURATION
+         * ============================================================
+         *
+         * Browser -> Kong
+         *
+         * Kong:
+         *   :8000
+         *
+         * Product Service:
+         *   :9002
+         *
+         * Order Service:
+         *   :9003
+         *
+         * IMPORTANT:
+         * The browser talks to Kong, NOT directly to the services.
+         */
+
+        const KONG_API_URL = "http://localhost:8000";
+
+
+        /*
+         * ============================================================
+         * JWT PARSER
+         * ============================================================
+         */
 
         function parseJwt(token) {
+
             try {
+
                 const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+
+                const base64 = base64Url
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+
+                const jsonPayload = decodeURIComponent(
+                    window.atob(base64)
+                        .split('')
+                        .map(function (c) {
+                            return '%' +
+                                ('00' + c.charCodeAt(0).toString(16))
+                                    .slice(-2);
+                        })
+                        .join('')
+                );
+
                 return JSON.parse(jsonPayload);
+
             } catch (e) {
+
+                console.error("JWT parsing failed:", e);
+
                 return null;
             }
         }
 
-        // 🛒 BUYER UTILITIES: Fetch rows from your products microservice container
+
+        /*
+         * ============================================================
+         * LOAD MARKETPLACE PRODUCTS
+         * ============================================================
+         */
+
         async function loadMarketplaceProducts() {
-            const gridContainer = document.getElementById('marketplaceGrid');
+
+            const gridContainer =
+                document.getElementById('marketplaceGrid');
 
             try {
-                const response = await fetch(`${PRODUCTS_API_URL}/products`);
+
+                /*
+                 * Browser -> Kong -> Product Service
+                 */
+
+                const response = await fetch(
+                    `${KONG_API_URL}/products`
+                );
+
+
                 const products = await response.json();
 
+
                 if (!response.ok) {
-                    throw new Error("Pipeline retrieval failure");
+
+                    throw new Error(
+                        "Pipeline retrieval failure"
+                    );
                 }
 
-                // Clear out fallback loader cards
+
                 gridContainer.innerHTML = "";
 
+
                 if (products.length === 0) {
+
                     gridContainer.innerHTML = `
-                        <div class="card" style="grid-column: 1 / -1; text-align:center; padding:40px;">
-                            <h4>📦 Catalog Empty</h4>
-                            <p>No product rows exist in the database yet. Log in as a seller node to seed data!</p>
-                        </div>
-                    `;
+
+                    <div
+                        class="card"
+                        style="grid-column:1 / -1; text-align:center; padding:40px;">
+
+                        <h4>📦 Catalog Empty</h4>
+
+                        <p>
+                            No product rows exist in the database yet.
+                        </p>
+
+                    </div>
+
+                `;
+
                     return;
                 }
 
-                // Loop over rows and inject beautiful structural UI components
+
+                /*
+                 * Create product cards
+                 */
+
                 products.forEach(product => {
-                    const productCard = document.createElement('div');
+
+                    const productCard =
+                        document.createElement('div');
+
                     productCard.className = 'card';
+
+
                     productCard.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                            <h4 style="color:#fff;">${product.title}</h4>
-                            <span style="font-size:12px; font-weight:700; color:var(--accent-color); background:rgba(0,242,254,0.1); padding:2px 8px; border-radius:4px;">
-                                $${product.price.toFixed(2)}
-                            </span>
-                        </div>
-                        <p style="margin: 12px 0; min-height:42px;">${product.description}</p>
-                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-secondary); border-top:1px solid var(--border-color); padding-top:12px;">
-                            <span>Merchant: <b>${product.seller_name}</b></span>
-                            <span>Stock: <b style="color:${product.quantity > 0 ? '#00f2fe' : '#ff4a5a'}">${product.quantity}</b></span>
-                        </div>
-                        <button style="margin-top:16px; width:100%;" ${product.quantity === 0 ? 'disabled' : ''}>
-                            ${product.quantity > 0 ? '🛒 Purchase Item' : '❌ Out of Stock'}
-                        </button>
-                    `;
+
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:flex-start;
+                        ">
+
+                        <h4 style="color:#fff;">
+                            ${product.title}
+                        </h4>
+
+                        <span
+                            style="
+                                font-size:12px;
+                                font-weight:700;
+                                color:var(--accent-color);
+                                background:rgba(0,242,254,0.1);
+                                padding:2px 8px;
+                                border-radius:4px;
+                            ">
+
+                            $${Number(product.price).toFixed(2)}
+
+                        </span>
+
+                    </div>
+
+
+                    <p style="margin:12px 0; min-height:42px;">
+                        ${product.description}
+                    </p>
+
+
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                            font-size:12px;
+                            color:var(--text-secondary);
+                            border-top:1px solid var(--border-color);
+                            padding-top:12px;
+                        ">
+
+                        <span>
+                            Merchant:
+                            <b>${product.seller_name}</b>
+                        </span>
+
+                        <span>
+                            Stock:
+                            <b
+                                style="
+                                    color:${product.quantity > 0
+                            ? '#00f2fe'
+                            : '#ff4a5a'}
+                                ">
+
+                                ${product.quantity}
+
+                            </b>
+                        </span>
+
+                    </div>
+
+
+                    <button
+                        style="margin-top:16px; width:100%;"
+                        ${product.quantity === 0 ? 'disabled' : ''}
+                        onclick="purchaseProduct(${product.id})">
+
+                        ${product.quantity > 0
+                            ? '🛒 Purchase Item'
+                            : '❌ Out of Stock'
+                        }
+
+                    </button>
+
+                `;
+
+
                     gridContainer.appendChild(productCard);
+
                 });
 
             } catch (err) {
+
                 console.error(err);
+
                 gridContainer.innerHTML = `
-                    <div class="card" style="grid-column: 1 / -1; border-left-color: var(--danger-color);">
-                        <h4 style="color:var(--danger-color);">Microservice Communication Failure</h4>
-                        <p>Could not load the catalog matrix. Ensure your products docker container container is listening on port 9002 with proper CORS headers enabled.</p>
-                    </div>
-                `;
+
+                <div
+                    class="card"
+                    style="
+                        grid-column:1 / -1;
+                        border-left-color:var(--danger-color);
+                    ">
+
+                    <h4 style="color:var(--danger-color);">
+                        Microservice Communication Failure
+                    </h4>
+
+                    <p>
+                        Could not load the catalog matrix.
+                        Ensure Kong and the Products service
+                        are running.
+                    </p>
+
+                </div>
+
+            `;
             }
         }
 
-        // On screen boot initialization
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            window.location.href = "/login";
-        } else {
-            const userData = parseJwt(token);
-            if (userData && userData.sub) {
-                document.getElementById('welcomeTitle').innerText = `Welcome, ${userData.sub}`;
 
-                // Determine layout mapping
-                if (userData.role === 'seller') {
-                    document.getElementById('userRoleBadge').innerText = 'System Node: Seller';
-                    document.getElementById('userRoleBadge').style.borderColor = 'rgba(255, 147, 15, 0.3)';
-                    document.getElementById('userRoleBadge').style.background = 'rgba(255, 147, 15, 0.1)';
-                    document.getElementById('userRoleBadge').style.color = '#ff930f';
-                    document.getElementById('sellerUI').classList.remove('hidden');
-                } else {
-                    document.getElementById('userRoleBadge').innerText = 'System Node: Buyer';
-                    document.getElementById('buyerUI').classList.remove('hidden');
+        /*
+         * ============================================================
+         * PURCHASE PRODUCT
+         * ============================================================
+         *
+         * Browser
+         *     ↓
+         * Kong :8000
+         *     ↓
+         * Order Service :9003
+         */
 
-                    // Trigger the catalog fetch hook immediately for buyers
-                    loadMarketplaceProducts();
-                }
-            } else {
+        async function purchaseProduct(productId) {
+
+            const token =
+                localStorage.getItem('access_token');
+
+
+            if (!token) {
+
                 logout();
+
+                return;
             }
+
+
+            const userData =
+                parseJwt(token);
+
+
+            if (!userData || !userData.sub) {
+
+                logout();
+
+                return;
+            }
+
+
+            /*
+             * Generate a client-side order ID.
+             *
+             * IMPORTANT:
+             * Ideally the database should generate this ID.
+             * This is kept here because your current OrderCreate
+             * schema expects order_id.
+             */
+
+            const orderId =
+                Date.now();
+
+
+            const orderPayload = {
+
+                order_id: orderId,
+
+                user_name: userData.sub,
+
+                user_name: Number(userData.user_name),
+
+                product_id: Number(productId)
+
+            };
+
+
+            try {
+
+                /*
+                 * Send order through Kong.
+                 */
+
+                const response = await fetch(
+                    `${KONG_API_URL}/orders`,
+                    {
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                            /*
+                             * JWT authentication
+                             */
+
+                            "Authorization":
+                                `Bearer ${token}`
+
+                        },
+
+                        body:
+                            JSON.stringify(orderPayload)
+                    }
+                );
+
+
+                const result =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        result.detail ||
+                        "Order creation failed"
+                    );
+                }
+
+
+                /*
+                 * Purchase succeeded.
+                 */
+
+                alert(
+                    `✅ Order ${result.id || orderId} created successfully!`
+                );
+
+
+                /*
+                 * Refresh marketplace so stock can
+                 * immediately be reflected.
+                 */
+
+                loadMarketplaceProducts();
+
+
+                /*
+                 * Refresh user's orders.
+                 */
+
+                loadMyOrders();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Purchase failed:",
+                    error
+                );
+
+
+                alert(
+                    `❌ Purchase failed: ${error.message}`
+                );
+            }
+
         }
+
+
+        /*
+         * ============================================================
+         * LOAD USER ORDERS
+         * ============================================================
+         *
+         * Expected endpoint:
+         *
+         * GET /orders/user/{user_id}
+         *
+         * through Kong.
+         *
+         * If your actual endpoint is different,
+         * change the URL below.
+         */
+
+        async function loadMyOrders() {
+
+            const ordersGrid =
+                document.getElementById('ordersGrid');
+
+
+            const token =
+                localStorage.getItem('access_token');
+
+
+            if (!token) {
+
+                logout();
+
+                return;
+            }
+
+
+            const userData =
+                parseJwt(token);
+
+
+            if (!userData || !userData.user_name) {
+
+                ordersGrid.innerHTML = `
+
+                <div class="card">
+
+                    <h4>Unable to identify user</h4>
+
+                    <p>
+                        Your authentication token does not
+                        contain a user_name.
+                    </p>
+
+                </div>
+
+            `;
+
+                return;
+            }
+
+
+            try {
+
+                /*
+                 * Browser
+                 *    ↓
+                 * Kong
+                 *    ↓
+                 * Order Service
+                 */
+
+                const response = await fetch(
+                    `${KONG_API_URL}/orders/user/${userData.user_name}`,
+                    {
+                        headers: {
+
+                            "Authorization":
+                                `Bearer ${token}`
+
+                        }
+                    }
+                );
+
+
+                const orders =
+                    await response.json();
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        orders.detail ||
+                        "Could not retrieve orders"
+                    );
+                }
+
+
+                ordersGrid.innerHTML = "";
+
+
+                if (orders.length === 0) {
+
+                    ordersGrid.innerHTML = `
+
+                    <div
+                        class="card"
+                        style="
+                            grid-column:1 / -1;
+                            text-align:center;
+                            padding:40px;
+                        ">
+
+                        <h4>
+                            🛒 No Orders Yet
+                        </h4>
+
+                        <p>
+                            Purchase a product and your
+                            order will appear here.
+                        </p>
+
+                    </div>
+
+                `;
+
+                    return;
+                }
+
+
+                /*
+                 * Render orders.
+                 */
+
+                orders.forEach(order => {
+
+                    const orderCard =
+                        document.createElement('div');
+
+                    orderCard.className =
+                        'card';
+
+
+                    orderCard.innerHTML = `
+
+                    <div
+                        style="
+                            display:flex;
+                            justify-content:space-between;
+                            align-items:center;
+                        ">
+
+                        <h4>
+                            📦 Order #${order.id}
+                        </h4>
+
+                        <span
+                            style="
+                                font-size:11px;
+                                font-weight:700;
+                                color:var(--accent-color);
+                            ">
+
+                            CONFIRMED
+
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        style="
+                            margin-top:14px;
+                            font-size:13px;
+                            color:var(--text-secondary);
+                        ">
+
+                        <p>
+                            Product ID:
+                            <b style="color:#fff;">
+                                ${order.product_id}
+                            </b>
+                        </p>
+
+
+                        <p>
+                            User ID:
+                            <b style="color:#fff;">
+                                ${order.user_id}
+                            </b>
+                        </p>
+
+
+                        <p>
+                            Order ID:
+                            <b style="color:#fff;">
+                                ${order.id}
+                            </b>
+                        </p>
+
+                    </div>
+
+                `;
+
+
+                    ordersGrid.appendChild(orderCard);
+
+                });
+
+
+            } catch (error) {
+
+                console.error(
+                    "Order retrieval failed:",
+                    error
+                );
+
+
+                ordersGrid.innerHTML = `
+
+                <div
+                    class="card"
+                    style="
+                        grid-column:1 / -1;
+                        border-left-color:var(--danger-color);
+                    ">
+
+                    <h4 style="color:var(--danger-color);">
+                        Order Retrieval Failure
+                    </h4>
+
+                    <p>
+                        ${error.message}
+                    </p>
+
+                </div>
+
+            `;
+
+            }
+
+        }
+
+
+        /*
+         * ============================================================
+         * INITIALIZATION
+         * ============================================================
+         */
+
+        const token =
+            localStorage.getItem('access_token');
+
+
+        if (!token) {
+
+            window.location.href = "/login";
+
+        } else {
+
+            const userData =
+                parseJwt(token);
+
+
+            if (userData && userData.sub) {
+
+                /*
+                 * Welcome message
+                 */
+
+                document.getElementById(
+                    'welcomeTitle'
+                ).innerText =
+                    `Welcome, ${userData.sub}`;
+
+
+                /*
+                 * Determine user role.
+                 */
+
+                if (userData.role === 'seller') {
+
+                    document.getElementById(
+                        'userRoleBadge'
+                    ).innerText =
+                        'System Node: Seller';
+
+
+                    document.getElementById(
+                        'userRoleBadge'
+                    ).style.borderColor =
+                        'rgba(255, 147, 15, 0.3)';
+
+
+                    document.getElementById(
+                        'userRoleBadge'
+                    ).style.background =
+                        'rgba(255, 147, 15, 0.1)';
+
+
+                    document.getElementById(
+                        'userRoleBadge'
+                    ).style.color =
+                        '#ff930f';
+
+
+                    /*
+                     * Your seller UI can be initialized here.
+                     */
+
+                    const sellerUI =
+                        document.getElementById('sellerUI');
+
+                    if (sellerUI) {
+
+                        sellerUI.classList.remove('hidden');
+
+                    }
+
+                } else {
+
+                    document.getElementById(
+                        'userRoleBadge'
+                    ).innerText =
+                        'System Node: Buyer';
+
+
+                    document.getElementById(
+                        'buyerUI'
+                    ).classList.remove('hidden');
+
+
+                    /*
+                     * Load marketplace.
+                     */
+
+                    loadMarketplaceProducts();
+
+
+                    /*
+                     * Load existing orders.
+                     */
+
+                    loadMyOrders();
+
+                }
+
+            } else {
+
+                logout();
+
+            }
+
+        }
+
+
+        /*
+         * ============================================================
+         * LOGOUT
+         * ============================================================
+         */
 
         function logout() {
-            localStorage.removeItem('access_token');
-            window.location.href = "/login";
+
+            localStorage.removeItem(
+                'access_token'
+            );
+
+            window.location.href =
+                "/login";
         }
+
     </script>
+    ```
+
 </body>
 
 </html>

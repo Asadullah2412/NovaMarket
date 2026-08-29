@@ -28,9 +28,7 @@ def all_orders(db:db_dependency):
 @OrderRouter.post('/orders')
 async def add_new_order(order_data: OrderCreate,db:db_dependency):
     # check first if the products exists 
-    # target the url of product service
-    # product_service_url = f"http://localhost:9002/products/{order_data.product_id}"
-    # user_service_url = f"http://localhost:9001/users/{order_data.user_id}"
+    
     product_service_url = (
         f"http://novamarket-products:9002/products/{order_data.product_id}"
     )
@@ -86,11 +84,11 @@ def update_order(order_data:OrderCreate,db:db_dependency):
     return order
 
 # get single order
-@OrderRouter.get('/orders/{order_id}')
-def get_order(order_id:int, db:db_dependency):
-    order = db.get(model_db.Order,order_id)
+@OrderRouter.get('/orders/{user_id}')
+def get_order(user_id:int, db:db_dependency):
+    order = db.get(model_db.Order,user_id)
     if not order:
-         raise HTTPException(status_code=404, detail="Order not found")
+         raise HTTPException(status_code=404, detail="user not found")
     return order
 
 # delete order
