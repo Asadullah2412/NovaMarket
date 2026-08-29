@@ -29,9 +29,17 @@ def all_orders(db:db_dependency):
 async def add_new_order(order_data: OrderCreate,db:db_dependency):
     # check first if the products exists 
     # target the url of product service
-    product_service_url = f"http://localhost:8002/products/{order_data.product_id}"
-    user_service_url = f"http://localhost:8001/users/{order_data.user_id}"
-    #  open an http cl;ient session to make the request 
+    # product_service_url = f"http://localhost:9002/products/{order_data.product_id}"
+    # user_service_url = f"http://localhost:9001/users/{order_data.user_id}"
+    product_service_url = (
+        f"http://novamarket-products:9002/products/{order_data.product_id}"
+    )
+
+    user_service_url = (
+        f"http://novamarket-users:9001/users/{order_data.user_id}"
+    )
+
+    #  open an http client session to make the request 
     async with httpx.AsyncClient() as client:
         try:
             product_response = await client.get(product_service_url)

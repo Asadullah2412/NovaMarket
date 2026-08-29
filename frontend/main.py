@@ -51,4 +51,4 @@ def get_seller_page():
 @app.get("/buyer-dashboard", response_class=FileResponse)
 def get_buyer_page():
     return FileResponse("templates/buyer_dashboard.html")
-# uvicorn main:app --reload --port 5000
+# 
